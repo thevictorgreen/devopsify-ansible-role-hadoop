@@ -1,6 +1,46 @@
 ---
-# tasks file for Apache Hadoop
+# tasks file for roles/hadoopmaster
 - name: Update Repositories
   become: yes
   apt:
     update_cache: yes
+
+- name: Add hadoop user
+  become: yes
+  user:
+    name: hadoop
+    shell: /bin/bash
+
+- name: Add hadoop user To The wheel Group
+  become: yes
+  user:
+    name: hadoop
+    groups: wheel
+    append: yes
+
+- name: Create Hadoop Master automation directories
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - '/root/.hadoop_automate'
+
+- name: Upload hadoop_init.sh File
+  become: yes
+  copy:
+    src: hadoop_init.sh
+    dest: /root/.hadoop_automate/hadoop_init.sh
+
+- name: Change permissions on hadoop_init.sh
+  become: yes
+  file:
+    path: /root/.hadoop_automate/hadoop_init.sh
+    mode: "u+rwx"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Run Hadoop Initialization script
+  become: yes
+  command: /root/.hadoop_automate/hadoop_init.sh
+  args:
+    executable: /bin/bash
